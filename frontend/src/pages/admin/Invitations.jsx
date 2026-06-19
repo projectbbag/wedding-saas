@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, ExternalLink, Edit3, ImageIcon, Calendar, Music, Heart, User } from "lucide-react";
 
 const empty = {
-  slug: "", template: "elegant", hide_photos: false,
+  slug: "", template: "elegant", hide_photos: false, hide_gallery: false, hide_video: false,
   groom_name: "", groom_full_name: "", groom_father: "", groom_mother: "", groom_instagram: "", groom_photo: "",
   bride_name: "", bride_full_name: "", bride_father: "", bride_mother: "", bride_instagram: "", bride_photo: "",
   wedding_date: "2026-07-17T08:00:00+07:00",
@@ -199,6 +199,12 @@ export default function Invitations() {
                   <ToggleField editing={editing} setEditing={setEditing} k="hide_photos"
                     label="Mode Tanpa Foto Mempelai"
                     hint="Aktifkan jika ingin undangan tampil dengan monogram inisial (tanpa foto pasangan). Cocok untuk privasi atau gaya minimalis."/>
+                  <ToggleField editing={editing} setEditing={setEditing} k="hide_gallery"
+                    label="Sembunyikan Galeri Foto"
+                    hint="Sembunyikan seluruh section galeri foto dari undangan publik."/>
+                  <ToggleField editing={editing} setEditing={setEditing} k="hide_video"
+                    label="Sembunyikan Video Prewedding"
+                    hint="Sembunyikan section video prewedding dari undangan publik."/>
                   <Field editing={editing} setEditing={setEditing} label="Tanggal Pernikahan (ISO)" k="wedding_date" placeholder="2026-07-17T08:00:00+07:00"/>
                   <Field editing={editing} setEditing={setEditing} label="Quote / Ayat" k="quote_text" textarea placeholder="Ayat / kutipan favorit..."/>
                   <Field editing={editing} setEditing={setEditing} label="Sumber Quote" k="quote_source" placeholder="QS. Ar-Rum: 21"/>

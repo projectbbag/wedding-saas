@@ -66,15 +66,23 @@ export default function InvitationPage() {
     publicApi.trackVisit(slug).then((r) => setVisitorCount(r.data.visitor_count)).catch(() => {});
     if (audioRef.current) {
       audioRef.current.volume = 0.45;
-      audioRef.current.play().then(() => setMusicOn(true)).catch(() => {});
+      audioRef.current.play()
+        .then(() => setMusicOn(true))
+        .catch((err) => { console.warn("Autoplay blocked or audio error:", err); setMusicOn(false); });
     }
     setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 100);
   };
 
   const toggleMusic = () => {
     if (!audioRef.current) return;
-    if (musicOn) { audioRef.current.pause(); setMusicOn(false); }
-    else { audioRef.current.play().then(() => setMusicOn(true)).catch(() => {}); }
+    if (musicOn) {
+      audioRef.current.pause();
+      setMusicOn(false);
+    } else {
+      audioRef.current.play()
+        .then(() => setMusicOn(true))
+        .catch((err) => { console.warn("Music play failed:", err); toast.error("Tidak dapat memutar musik. Coba klik tombol musik sekali lagi."); });
+    }
   };
 
   if (loading) {
@@ -91,10 +99,14 @@ export default function InvitationPage() {
   const inv = data.invitation;
   const template = templateOverride || inv.template || "elegant";
   const themeClass = `theme-${template}`;
+  // Resolve music URL — support both absolute and backend-relative paths like /api/static/...
+  const musicSrc = inv.music_url
+    ? (inv.music_url.startsWith("http") ? inv.music_url : `${process.env.REACT_APP_BACKEND_URL}${inv.music_url}`)
+    : "";
 
   return (
     <div className={themeClass} style={{ minHeight: "100vh" }}>
-      <audio ref={audioRef} src={inv.music_url} loop preload="auto" />
+      <audio ref={audioRef} src={musicSrc} loop preload="auto" crossOrigin="anonymous" data-testid="bg-audio"/>
 
       <AnimatePresence>
         {!opened && <CoverScreen inv={inv} guestName={guestName} onOpen={handleOpen} template={template} />}
@@ -108,8 +120,8 @@ export default function InvitationPage() {
           <EventsSection inv={inv} />
           <MapsSection inv={inv} />
           <LoveStorySection stories={data.stories} />
-          <GallerySection gallery={data.gallery} setLightbox={setLightbox} />
-          <VideoSection inv={inv} />
+          {!inv.hide_gallery && <GallerySection gallery={data.gallery} setLightbox={setLightbox} />}
+          {!inv.hide_video && <VideoSection inv={inv} />}
           <RsvpSection slug={slug} guestName={guestName} onSubmit={() => {
             publicApi.listWishes(slug, 1).then((r) => setWishes(r.data.items));
           }} />

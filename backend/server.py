@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -74,6 +75,8 @@ class InvitationBase(BaseModel):
     slug: str
     template: str = "elegant"  # elegant, luxury, modern, minimalist
     hide_photos: bool = False
+    hide_gallery: bool = False
+    hide_video: bool = False
     groom_name: str
     groom_full_name: str
     groom_father: str
@@ -446,6 +449,8 @@ async def seed_data():
         "slug": slug,
         "template": "elegant",
         "hide_photos": existing.get("hide_photos", False) if existing else False,
+        "hide_gallery": existing.get("hide_gallery", False) if existing else False,
+        "hide_video": existing.get("hide_video", False) if existing else False,
         "owner_id": admin["id"],
         "groom_name": "Ahnaf",
         "groom_full_name": "Ahnaf Zainul Muttaqin",
@@ -471,7 +476,7 @@ async def seed_data():
         "maps_embed": "https://www.google.com/maps?q=Masjid+Ash+Shomad+Citra+Raya+Tangerang&output=embed",
         "maps_link": "https://maps.google.com/?q=Masjid+Ash+Shomad+Citra+Raya+Tangerang",
         "cover_photo": "https://images.pexels.com/photos/32346176/pexels-photo-32346176.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-        "music_url": "https://cdn.pixabay.com/audio/2022/10/18/audio_31c1b6e8b3.mp3",
+        "music_url": "/api/static/music/wedding-default.mp3",
         "video_url": "https://www.youtube.com/embed/d_HlPboLRL8",
         "quote_text": "Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu istri-istri dari jenismu sendiri, supaya kamu cenderung dan merasa tenteram kepadanya, dan dijadikan-Nya di antaramu rasa kasih dan sayang.",
         "quote_source": "QS. Ar-Rum: 21",
@@ -534,6 +539,11 @@ async def seed_data():
 
 
 app.include_router(api_router)
+
+# Serve static music/assets — mounted at /api/static so it passes through Kubernetes ingress
+static_dir = ROOT_DIR / "static"
+static_dir.mkdir(exist_ok=True)
+app.mount("/api/static", StaticFiles(directory=str(static_dir)), name="static")
 
 app.add_middleware(
     CORSMiddleware,
