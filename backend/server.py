@@ -73,6 +73,7 @@ class InvitationBase(BaseModel):
     model_config = ConfigDict(extra="ignore")
     slug: str
     template: str = "elegant"  # elegant, luxury, modern, minimalist
+    hide_photos: bool = False
     groom_name: str
     groom_full_name: str
     groom_father: str
@@ -444,6 +445,7 @@ async def seed_data():
         "id": existing["id"] if existing else str(uuid.uuid4()),
         "slug": slug,
         "template": "elegant",
+        "hide_photos": existing.get("hide_photos", False) if existing else False,
         "owner_id": admin["id"],
         "groom_name": "Ahnaf",
         "groom_full_name": "Ahnaf Zainul Muttaqin",

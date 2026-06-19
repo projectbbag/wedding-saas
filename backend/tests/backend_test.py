@@ -196,9 +196,73 @@ class TestAdminCRUD:
         # Get current
         r = session.get(f"{API}/admin/invitations", headers=auth_headers)
         inv = next(i for i in r.json() if i["slug"] == SLUG)
-        original_quote = inv.get("quote_source", "")
         # Update
         inv["quote_source"] = "QS. Ar-Rum: 21"
         r2 = session.put(f"{API}/admin/invitations/{SLUG}", json=inv, headers=auth_headers)
         assert r2.status_code == 200, r2.text
         assert r2.json()["quote_source"] == "QS. Ar-Rum: 21"
+
+
+# ---------- hide_photos feature ----------
+class TestHidePhotos:
+    """Tests for new hide_photos boolean field on Invitation."""
+
+    def test_public_invitation_returns_hide_photos(self, session):
+        r = session.get(f"{API}/invitations/{SLUG}")
+        assert r.status_code == 200
+        inv = r.json()["invitation"]
+        assert "hide_photos" in inv
+        assert isinstance(inv["hide_photos"], bool)
+
+    def test_admin_list_includes_hide_photos(self, session, auth_headers):
+        r = session.get(f"{API}/admin/invitations", headers=auth_headers)
+        assert r.status_code == 200
+        inv = next(i for i in r.json() if i["slug"] == SLUG)
+        assert "hide_photos" in inv
+
+    def test_toggle_hide_photos_persists(self, session, auth_headers):
+        # Get current
+        r = session.get(f"{API}/admin/invitations", headers=auth_headers)
+        inv = next(i for i in r.json() if i["slug"] == SLUG)
+        original = bool(inv.get("hide_photos", False))
+        original_fields = {
+            "groom_full_name": inv.get("groom_full_name"),
+            "bride_full_name": inv.get("bride_full_name"),
+            "wedding_date": inv.get("wedding_date"),
+        }
+        # Flip via PUT (simulating tabbed-form payload that excludes _isNew/id/etc.)
+        payload = {k: v for k, v in inv.items() if k not in ("_isNew", "_originalSlug", "id", "owner_id", "created_at")}
+        payload["hide_photos"] = not original
+        r2 = session.put(f"{API}/admin/invitations/{SLUG}", json=payload, headers=auth_headers)
+        assert r2.status_code == 200, r2.text
+        assert r2.json()["hide_photos"] is (not original)
+        # Verify persistence via public endpoint and that other fields preserved
+        r3 = session.get(f"{API}/invitations/{SLUG}")
+        assert r3.status_code == 200
+        inv3 = r3.json()["invitation"]
+        assert inv3["hide_photos"] is (not original)
+        for k, v in original_fields.items():
+            assert inv3.get(k) == v, f"Field '{k}' lost: was {v!r}, now {inv3.get(k)!r}"
+        # Restore
+        payload["hide_photos"] = original
+        r4 = session.put(f"{API}/admin/invitations/{SLUG}", json=payload, headers=auth_headers)
+        assert r4.status_code == 200
+        assert r4.json()["hide_photos"] is original
+
+    def test_create_invitation_with_hide_photos_true(self, session, auth_headers):
+        test_slug = f"test-hide-photos-{int(time.time())}"
+        payload = {
+            "slug": test_slug, "template": "elegant", "hide_photos": True,
+            "groom_name": "A", "groom_full_name": "Alfa", "groom_father": "F", "groom_mother": "M",
+            "bride_name": "B", "bride_full_name": "Beta", "bride_father": "F", "bride_mother": "M",
+            "wedding_date": "2026-12-31T08:00:00+07:00",
+        }
+        r = session.post(f"{API}/admin/invitations", json=payload, headers=auth_headers)
+        assert r.status_code == 200, r.text
+        assert r.json()["hide_photos"] is True
+        # Verify via GET
+        r2 = session.get(f"{API}/invitations/{test_slug}")
+        assert r2.status_code == 200
+        assert r2.json()["invitation"]["hide_photos"] is True
+        # Cleanup
+        session.delete(f"{API}/admin/invitations/{test_slug}", headers=auth_headers)

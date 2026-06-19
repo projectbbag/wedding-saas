@@ -151,34 +151,67 @@ export default function InvitationPage() {
 
 /* ============= Sections ============= */
 function CoverScreen({ inv, guestName, onOpen, template }) {
+  const hide = inv.hide_photos;
   return (
     <motion.div exit={{ opacity: 0, scale: 1.05 }} transition={{ duration: 0.8 }}
       className="fixed inset-0 z-50 overflow-hidden" data-testid="cover-screen">
-      <img src={inv.cover_photo} alt="" className="absolute inset-0 w-full h-full object-cover" />
-      <div className="absolute inset-0 cover-overlay" />
-      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white px-6">
+      {hide ? (
+        <div className="absolute inset-0" style={{
+          background: template === "luxury"
+            ? "radial-gradient(ellipse at center, #1a1410 0%, #050505 70%)"
+            : template === "minimalist"
+              ? "radial-gradient(ellipse at center, #ffffff 0%, #f5f5f5 70%)"
+              : template === "modern"
+                ? "radial-gradient(ellipse at center, #f9fafb 0%, #d1d5db 70%)"
+                : "radial-gradient(ellipse at center, #fdfbf7 0%, #e6d599 70%)"
+        }}>
+          {/* Decorative ornaments */}
+          <div className="absolute inset-0 opacity-20" style={{
+            backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='currentColor' stroke-width='0.6' opacity='0.5'%3E%3Cpath d='M40 10 Q50 25 40 40 Q30 25 40 10'/%3E%3Cpath d='M40 40 Q50 55 40 70 Q30 55 40 40'/%3E%3Cpath d='M10 40 Q25 30 40 40 Q25 50 10 40'/%3E%3Cpath d='M40 40 Q55 30 70 40 Q55 50 40 40'/%3E%3C/g%3E%3C/svg%3E\")",
+            color: "var(--primary, #B8923A)"
+          }} aria-hidden="true"/>
+        </div>
+      ) : (
+        <>
+          <img src={inv.cover_photo} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 cover-overlay" />
+        </>
+      )}
+      <div className={`relative z-10 h-full flex flex-col items-center justify-center text-center px-6 ${hide && (template === "minimalist" || template === "modern" || template === "elegant") ? "text-current" : "text-white"}`}>
+        {hide && (
+          <motion.div initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1, duration: 1 }}
+            className="mb-8 flex items-center justify-center" data-testid="cover-monogram">
+            <div className="relative w-32 h-32 md:w-40 md:h-40 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full border-2 anim-ring" style={{ borderColor: "var(--primary)" }}/>
+              <div className="absolute inset-3 rounded-full border opacity-60" style={{ borderColor: "var(--primary)" }}/>
+              <span style={{ fontFamily: "var(--font-heading)", color: "var(--primary)" }} className="text-5xl md:text-6xl">
+                {inv.groom_name?.[0]}<span className="italic mx-1">&</span>{inv.bride_name?.[0]}
+              </span>
+            </div>
+          </motion.div>
+        )}
         <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.8 }}
-          className="uppercase text-xs tracking-[0.5em] mb-6 text-white/80">The Wedding Of</motion.p>
+          className="uppercase text-xs tracking-[0.5em] mb-6 opacity-80">The Wedding Of</motion.p>
         <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 1 }}
           className="h-display text-5xl md:text-7xl mb-4">
-          {inv.groom_name} <span className="italic text-amber-300">&</span> {inv.bride_name}
+          {inv.groom_name} <span className="italic" style={{ color: hide ? "var(--primary)" : undefined }}>&</span> {inv.bride_name}
         </motion.h1>
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
-          className="text-sm tracking-[0.3em] uppercase mb-12 text-white/80">17 • Juli • 2026</motion.p>
+          className="text-sm tracking-[0.3em] uppercase mb-12 opacity-80">17 • Juli • 2026</motion.p>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1 }}
-          className="border border-white/30 rounded-2xl px-8 py-6 backdrop-blur bg-black/30 max-w-md mb-10">
-          <p className="text-xs uppercase tracking-[0.3em] text-amber-300 mb-2">Kepada Yth.</p>
-          <p className="text-xs text-white/70 mb-2">Bpk/Ibu/Saudara/i</p>
-          <p data-testid="guest-name-display" style={{ fontFamily: "Italiana, serif" }} className="text-3xl">{decodeURIComponent(guestName)}</p>
+          className={`border rounded-2xl px-8 py-6 backdrop-blur max-w-md mb-10 ${hide ? "border-current/30 bg-current/5" : "border-white/30 bg-black/30"}`}>
+          <p className="text-xs uppercase tracking-[0.3em] mb-2" style={{ color: "var(--primary)" }}>Kepada Yth.</p>
+          <p className="text-xs opacity-70 mb-2">Bpk/Ibu/Saudara/i</p>
+          <p data-testid="guest-name-display" style={{ fontFamily: "var(--font-heading)" }} className="text-3xl">{decodeURIComponent(guestName)}</p>
         </motion.div>
 
         <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.4 }}
           onClick={onOpen} data-testid="open-invitation-btn"
-          className="px-10 py-4 bg-gradient-to-r from-amber-400 to-amber-600 text-black uppercase tracking-[0.3em] text-xs font-medium rounded-full hover:scale-105 transition">
-          <Mail size={14} className="inline mr-2 -mt-0.5"/> Buka Undangan
+          className="btn-gold inline-flex items-center gap-2">
+          <Mail size={14}/> Buka Undangan
         </motion.button>
-        <motion.div animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 2 }} className="mt-12 text-white/60">
+        <motion.div animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 2 }} className="mt-12 opacity-60">
           <ChevronDown size={20} />
         </motion.div>
       </div>
@@ -187,14 +220,29 @@ function CoverScreen({ inv, guestName, onOpen, template }) {
 }
 
 function HeroBanner({ inv, guestName, countdown }) {
+  const hide = inv.hide_photos;
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      <img src={inv.cover_photo} alt="" className="absolute inset-0 w-full h-full object-cover" />
-      <div className="absolute inset-0 cover-overlay" />
-      <motion.div {...fadeUp} className="relative z-10 text-center text-white px-6 max-w-3xl">
-        <p className="uppercase text-xs tracking-[0.5em] mb-6 text-amber-300">Save The Date</p>
+      {hide ? (
+        <div className="absolute inset-0 bg-surface-c" />
+      ) : (
+        <>
+          <img src={inv.cover_photo} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 cover-overlay" />
+        </>
+      )}
+      <motion.div {...fadeUp} className={`relative z-10 text-center px-6 max-w-3xl ${hide ? "" : "text-white"}`}>
+        {hide && (
+          <div className="mb-6 flex justify-center">
+            <div className="relative w-24 h-24 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full border-2 border-primary-c"/>
+              <Heart size={28} className="text-primary-c"/>
+            </div>
+          </div>
+        )}
+        <p className="uppercase text-xs tracking-[0.5em] mb-6 text-primary-c">Save The Date</p>
         <h2 className="h-display text-5xl md:text-7xl mb-6">{inv.groom_name} & {inv.bride_name}</h2>
-        <p className="text-sm tracking-[0.3em] uppercase mb-10 text-white/80">Jumat, 17 Juli 2026</p>
+        <p className="text-sm tracking-[0.3em] uppercase mb-10 opacity-80">Jumat, 17 Juli 2026</p>
         <div className="grid grid-cols-4 gap-3 max-w-lg mx-auto" data-testid="countdown">
           {[
             { l: "Hari", v: countdown.d },
@@ -202,9 +250,9 @@ function HeroBanner({ inv, guestName, countdown }) {
             { l: "Menit", v: countdown.m },
             { l: "Detik", v: countdown.s },
           ].map((c) => (
-            <div key={c.l} className="border border-white/30 backdrop-blur bg-black/20 rounded-xl py-4">
-              <div className="h-display text-3xl md:text-4xl text-amber-300">{String(c.v).padStart(2, "0")}</div>
-              <div className="text-[10px] uppercase tracking-[0.3em] mt-1 text-white/70">{c.l}</div>
+            <div key={c.l} className={`border rounded-xl py-4 ${hide ? "border-line-c bg-surface-c" : "border-white/30 backdrop-blur bg-black/20"}`}>
+              <div className="h-display text-3xl md:text-4xl text-primary-c">{String(c.v).padStart(2, "0")}</div>
+              <div className="text-[10px] uppercase tracking-[0.3em] mt-1 opacity-70">{c.l}</div>
             </div>
           ))}
         </div>
@@ -226,6 +274,7 @@ function QuoteSection({ inv }) {
 }
 
 function CoupleSection({ inv }) {
+  const hide = inv.hide_photos;
   return (
     <section className="section">
       <motion.div {...fadeUp} className="text-center mb-16 max-w-2xl mx-auto">
@@ -234,13 +283,21 @@ function CoupleSection({ inv }) {
         <div className="ornament-divider"><Heart size={14}/></div>
       </motion.div>
       <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 md:gap-20 items-start">
-        {[{ tag: "Mempelai Pria", full: inv.groom_full_name, photo: inv.groom_photo, father: inv.groom_father, mother: inv.groom_mother, ig: inv.groom_instagram },
-          { tag: "Mempelai Wanita", full: inv.bride_full_name, photo: inv.bride_photo, father: inv.bride_father, mother: inv.bride_mother, ig: inv.bride_instagram }
+        {[{ tag: "Mempelai Pria", initial: inv.groom_name?.[0], full: inv.groom_full_name, photo: inv.groom_photo, father: inv.groom_father, mother: inv.groom_mother, ig: inv.groom_instagram },
+          { tag: "Mempelai Wanita", initial: inv.bride_name?.[0], full: inv.bride_full_name, photo: inv.bride_photo, father: inv.bride_father, mother: inv.bride_mother, ig: inv.bride_instagram }
         ].map((p, i) => (
           <motion.div key={i} {...fadeUp} transition={{ duration: 0.8, delay: i * 0.15 }} className="text-center">
-            <div className="relative w-48 h-60 md:w-64 md:h-80 mx-auto mb-8 overflow-hidden rounded-t-full border-4 border-primary-c/30">
-              <img src={p.photo} alt={p.full} className="w-full h-full object-cover" />
-            </div>
+            {hide ? (
+              <div className="relative w-40 h-40 md:w-48 md:h-48 mx-auto mb-8 flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full border-2 border-primary-c anim-ring"/>
+                <div className="absolute inset-3 rounded-full border border-primary-c/40"/>
+                <span style={{ fontFamily: "var(--font-heading)", color: "var(--primary)" }} className="text-6xl md:text-7xl">{p.initial}</span>
+              </div>
+            ) : (
+              <div className="relative w-48 h-60 md:w-64 md:h-80 mx-auto mb-8 overflow-hidden rounded-t-full border-4 border-primary-c/30">
+                <img src={p.photo} alt={p.full} className="w-full h-full object-cover" />
+              </div>
+            )}
             <p className="text-xs uppercase tracking-[0.3em] text-primary-c mb-3">{p.tag}</p>
             <h3 className="h-display text-3xl md:text-4xl mb-4">{p.full}</h3>
             <p className="text-sm text-muted-c leading-relaxed">Putra/Putri dari<br/><strong className="text-current">{p.father}</strong><br/>&<br/><strong>{p.mother}</strong></p>
