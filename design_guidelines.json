@@ -1,0 +1,126 @@
+{
+  "theme": "hybrid",
+  "archetype": "5",
+  "global_rules": {
+    "fonts_banned": ["Inter", "Roboto", "Open Sans", "Lato", "Syne"],
+    "interactions": "Hover states must be lighter hues, focus states must have high contrast rings. Add aria-hidden to decorative elements. Ensure data-testid is present on all interactable elements."
+  },
+  "templates": {
+    "elegant": {
+      "theme": "light",
+      "colors": {
+        "background": "#FDFBF7",
+        "surface": "#FFFFFF",
+        "primary": "#D4AF37",
+        "text": "#2C2A25",
+        "accent": "#E6D599"
+      },
+      "typography": {
+        "heading": "Italiana",
+        "body": "Lora"
+      },
+      "style": "Cream, gold, white. Premium serif fonts. Mewah dan klasik. Heavy use of romantic floral ornaments and gold filigree. Classic overlapping layout."
+    },
+    "luxury": {
+      "theme": "dark",
+      "colors": {
+        "background": "#0A0A0A",
+        "surface": "#141414",
+        "primary": "#C5A059",
+        "text": "#F5F5F5",
+        "accent": "#8C7335"
+      },
+      "typography": {
+        "heading": "Cormorant Garamond",
+        "body": "DM Sans"
+      },
+      "style": "Black, gold, dark theme. Animasi premium. Eksklusif. Deep matte colors with digital metallic foil effects. Cinematic dark layout."
+    },
+    "modern": {
+      "theme": "light",
+      "colors": {
+        "background": "#F9FAFB",
+        "surface": "#FFFFFF",
+        "primary": "#111827",
+        "text": "#374151",
+        "accent": "#9CA3AF"
+      },
+      "typography": {
+        "heading": "Cabinet Grotesk",
+        "body": "Outfit"
+      },
+      "style": "Clean UI, minimal shadow, contemporary layout. Bold typography, asymmetry. The 'Editorial Future' look."
+    },
+    "minimalist": {
+      "theme": "light",
+      "colors": {
+        "background": "#FFFFFF",
+        "surface": "#FAFAFA",
+        "primary": "#000000",
+        "text": "#171717",
+        "accent": "#E5E5E5"
+      },
+      "typography": {
+        "heading": "Marcellus",
+        "body": "Work Sans"
+      },
+      "style": "Putih bersih, fokus tipografi, ringan. Geometric minimal lines, massive whitespace. High contrast text."
+    }
+  },
+  "admin_panel": {
+    "theme": "light",
+    "colors": {
+      "background": "#F3F4F6",
+      "surface": "#FFFFFF",
+      "primary": "#D4AF37",
+      "text": "#111827"
+    },
+    "typography": {
+      "heading": "Outfit",
+      "body": "DM Sans"
+    },
+    "style": "Premium dashboard-grade. Flat solid surfaces, dense compact spacing. Shadcn UI default logic but styled premium. Minimal rounded corners."
+  },
+  "layout_and_components": {
+    "public_invitation": {
+      "cover_screen": "Full-bleed photo, dark overlay (bg-black/50 to bg-black/30). Must be cinematic. Elegant typography reveal using Framer Motion. 'Buka Undangan' starts music.",
+      "countdown": "Minimalist grid or elegant pure typography.",
+      "profile": "Groom & bride photos with shapes dictating the template style (arches for Elegant, sharp rectangles for Modern/Luxury). Large typography for names.",
+      "love_story": "Vertical timeline. Use Framer Motion for scroll-triggered revealing.",
+      "events": "Akad + Resepsi displayed as high-end editorial cards.",
+      "gallery": "Masonry grid with lightbox support. Images must zoom beautifully.",
+      "rsvp_wishes": "Frictionless form using customized Shadcn elements.",
+      "gift": "Bank transfer cards with elegant 'copy' buttons and toasts. QRIS download integration."
+    }
+  },
+  "animations": {
+    "scroll": "MANDATORY: Lenis for smooth scrolling momentum.",
+    "reveal": "Framer Motion for stagger children, fade-in-up, and cover letter unboxing effects.",
+    "parallax": "Subtle parallax on hero images and deep gallery grids."
+  },
+  "media": {
+    "hero_cover": "https://images.pexels.com/photos/32346176/pexels-photo-32346176.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    "love_story_hero": "https://images.unsplash.com/photo-1541700513212-79f419c0221d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MDV8MHwxfHNlYXJjaHwxfHxpbmRvbmVzaWFuJTIwd2VkZGluZyUyMGNvdXBsZSUyMHRyYWRpdGlvbmFsJTIwZWxlZ2FudHxlbnwwfHx8fDE3ODE4ODkyMDZ8MA&ixlib=rb-4.1.0&q=85",
+    "groom_portrait": "https://images.unsplash.com/photo-1591954426313-5e47d525428d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MDV8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMGdyb29tJTIwcG9ydHJhaXQlMjBlbGVnYW50JTIwc3VpdHxlbnwwfHx8fDE3ODE4ODkyMDZ8MA&ixlib=rb-4.1.0&q=85",
+    "bride_portrait": "https://images.pexels.com/photos/13632879/pexels-photo-13632879.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    "gallery": [
+      "https://images.pexels.com/photos/35366670/pexels-photo-35366670.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "https://images.unsplash.com/photo-1744459451069-66e8cb7ef4d0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDV8MHwxfHNlYXJjaHwzfHxsdXh1cnklMjB3ZWRkaW5nJTIwY2luZW1hdGljJTIwZGV0YWlscyUyMHJvbWFuY2V8ZW58MHx8fHwxNzgxODg5MjA2fDA&ixlib=rb-4.1.0&q=85",
+      "https://images.unsplash.com/photo-1759887244219-17c3d64a7f01?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDV8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjB3ZWRkaW5nJTIwY2luZW1hdGljJTIwZGV0YWlscyUyMHJvbWFuY2V8ZW58MHx8fHwxNzgxODg5MjA2fDA&ixlib=rb-4.1.0&q=85",
+      "https://images.pexels.com/photos/17984867/pexels-photo-17984867.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "https://images.pexels.com/photos/37524690/pexels-photo-37524690.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "https://images.unsplash.com/photo-1751428948382-84e8cb91c2bd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDV8MHwxfHNlYXJjaHw0fHxsdXh1cnklMjB3ZWRkaW5nJTIwY2luZW1hdGljJTIwZGV0YWlscyUyMHJvbWFuY2V8ZW58MHx8fHwxNzgxODg5MjA2fDA&ixlib=rb-4.1.0&q=85"
+    ]
+  },
+  "instructions_to_main_agent": [
+    "READ THIS FIRST: Do not use generic fonts (e.g., Inter, Roboto). Implement the 4 distinct typography pairings (Italiana, Cormorant Garamond, Cabinet Grotesk, Marcellus) as listed.",
+    "Implement 4 separate CSS/Tailwind themes that dramatically alter the visual look (colors, font-families, and shapes/decorations).",
+    "Admin Panel should use standard Shadcn layouts but updated to look premium (subtle borders, flat colors, tight typography).",
+    "Public invitation must be Mobile-First and feature rich 'unboxing' or 'scroll-reveal' animations via framer-motion.",
+    "Always place a dark or gradient overlay over the cover image so the white text is readable (bg-black/40 min).",
+    "Every interactable button, link, and form input MUST contain a 'data-testid' attribute for testing.",
+    "Populate the site with the default seeded data (Ahnaf & Nabilla) as instructed.",
+    "Load images gracefully using standard performance best practices.",
+    "Include an audio element toggled by a floating music button."
+  ]
+}
