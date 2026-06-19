@@ -473,9 +473,23 @@ function WishesSection({ slug, wishes, setWishes, guestName }) {
 }
 
 function GiftSection({ gifts, inv }) {
-  const copy = (text) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Nomor rekening berhasil disalin");
+  const copy = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Nomor rekening berhasil disalin");
+    } catch {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        toast.success("Nomor rekening berhasil disalin");
+      } catch {
+        toast.error("Tidak bisa menyalin. Silakan salin manual.");
+      }
+    }
   };
   return (
     <section className="section">

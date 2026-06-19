@@ -33,7 +33,7 @@ export default function Templates() {
       <div className="mb-5">
         <label className="text-xs text-gray-600 mb-1 block">Undangan</label>
         <select value={selectedSlug} onChange={(e) => setSelectedSlug(e.target.value)} className="px-3 py-2 border border-gray-300 rounded text-sm">
-          {invitations.map((i) => <option key={i.slug} value={i.slug}>/{i.slug} — {i.groom_name} & {i.bride_name}</option>)}
+          {invitations.map((i) => <option key={i.slug} value={i.slug}>{`/${i.slug} — ${i.groom_name} & ${i.bride_name}`}</option>)}
         </select>
         {current && <p className="text-xs text-gray-500 mt-2">Template aktif: <strong>{current.template}</strong></p>}
       </div>

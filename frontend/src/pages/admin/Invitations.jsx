@@ -93,9 +93,9 @@ export default function Invitations() {
                 <td className="px-4 py-3"><span className="px-2 py-1 bg-amber-100 text-amber-800 rounded text-xs">{it.template}</span></td>
                 <td className="px-4 py-3 text-right">
                   <div className="inline-flex gap-2">
-                    <a href={`/${it.slug}?untuk=Demo`} target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-gray-100 rounded" data-testid={`view-${it.slug}`}><ExternalLink size={14}/></a>
-                    <button onClick={() => { setEditing({ ...it, _originalSlug: it.slug }); setShowForm(true); }} className="p-2 hover:bg-gray-100 rounded" data-testid={`edit-${it.slug}`}><Edit3 size={14}/></button>
-                    <button onClick={() => remove(it.slug)} className="p-2 hover:bg-red-50 text-red-600 rounded" data-testid={`delete-${it.slug}`}><Trash2 size={14}/></button>
+                    <a href={`/${it.slug}?untuk=Demo`} target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-gray-100 rounded" data-testid={`invitation-view-${it.slug}`}><ExternalLink size={14}/></a>
+                    <button onClick={() => { setEditing({ ...it, _originalSlug: it.slug }); setShowForm(true); }} className="p-2 hover:bg-gray-100 rounded" data-testid={`invitation-edit-${it.slug}`}><Edit3 size={14}/></button>
+                    <button onClick={() => remove(it.slug)} className="p-2 hover:bg-red-50 text-red-600 rounded" data-testid={`invitation-delete-${it.slug}`}><Trash2 size={14}/></button>
                   </div>
                 </td>
               </tr>
