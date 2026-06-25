@@ -17,9 +17,11 @@ from datetime import datetime, timezone, timedelta
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-mongo_url = os.environ['MONGO_URL']
+mongo_url = os.environ["MONGO_URL"]
+print("MONGO_URL =", mongo_url)
+
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+db = client[os.environ["DB_NAME"]]
 
 JWT_SECRET = os.environ.get('JWT_SECRET', 'ringvitation-super-secret-2026')
 JWT_ALGORITHM = "HS256"
