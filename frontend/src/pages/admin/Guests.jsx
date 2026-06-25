@@ -1,27 +1,34 @@
 import { useEffect, useState } from "react";
 import { adminApi } from "@/lib/api";
 import { toast } from "sonner";
-import { Plus, Trash2, QrCode, Send, Download } from "lucide-react";
+import { Plus, Trash2, Send, Download } from "lucide-react";
+import { useInvitation } from "@/lib/InvitationContext";
 
 export default function Guests() {
+  const { selectedSlug, selected } = useInvitation();
   const [items, setItems] = useState([]);
-  const [form, setForm] = useState({ invitation_slug: "ahnaf-nabilla", name: "", phone: "", category: "Keluarga" });
+  const [form, setForm] = useState({ name: "", phone: "", category: "Keluarga" });
   const [bulkText, setBulkText] = useState("");
 
-  const load = () => adminApi.listGuests().then((r) => setItems(r.data));
-  useEffect(() => { load(); }, []);
+  const load = () => {
+    if (!selectedSlug) { setItems([]); return; }
+    adminApi.listGuests(selectedSlug).then((r) => setItems(r.data));
+  };
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [selectedSlug]);
 
   const add = async () => {
+    if (!selectedSlug) return toast.error("Pilih undangan terlebih dahulu");
     if (!form.name) return toast.error("Nama wajib");
-    await adminApi.createGuest(form);
-    setForm({ ...form, name: "", phone: "" });
+    await adminApi.createGuest({ invitation_slug: selectedSlug, ...form });
+    setForm({ name: "", phone: "", category: "Keluarga" });
     toast.success("Tamu ditambahkan"); load();
   };
 
   const bulkAdd = async () => {
+    if (!selectedSlug) return toast.error("Pilih undangan terlebih dahulu");
     const lines = bulkText.split("\n").map((l) => l.trim()).filter(Boolean);
     if (lines.length === 0) return;
-    const data = lines.map((n) => ({ invitation_slug: form.invitation_slug, name: n, phone: "", category: "Keluarga" }));
+    const data = lines.map((n) => ({ invitation_slug: selectedSlug, name: n, phone: "", category: "Keluarga", checked_in: false }));
     await adminApi.bulkGuests(data);
     setBulkText("");
     toast.success(`${lines.length} tamu ditambahkan`); load();
@@ -40,15 +47,19 @@ export default function Guests() {
     const csv = ["Nama,Telepon,Kategori,Link"].concat(items.map((g) => `"${g.name}","${g.phone}","${g.category}","${window.location.origin}/${g.invitation_slug}?untuk=${encodeURIComponent(g.name)}"`)).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "tamu.csv"; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = `tamu-${selectedSlug}.csv`; a.click();
   };
+
+  if (!selected) {
+    return <div className="bg-amber-50 border border-amber-200 text-amber-800 p-6 rounded-xl text-sm">Pilih undangan terlebih dahulu dari selector di header.</div>;
+  }
 
   return (
     <div data-testid="admin-guests">
-      <div className="flex justify-between items-start mb-6">
+      <div className="flex justify-between items-start mb-4 flex-wrap gap-2">
         <div>
-          <h2 className="text-2xl font-semibold">Tamu</h2>
-          <p className="text-gray-500 text-sm">Kelola daftar tamu undangan, generate link & QR code.</p>
+          <h2 className="text-2xl font-semibold mb-1">Tamu</h2>
+          <p className="text-gray-500 text-sm">Daftar tamu untuk: <span className="text-amber-700 font-medium">{selected.groom_name} & {selected.bride_name}</span></p>
         </div>
         <button onClick={exportCsv} className="px-3 py-2 border border-gray-300 text-sm rounded flex items-center gap-2" data-testid="export-guests">
           <Download size={14}/> Export CSV
@@ -60,7 +71,7 @@ export default function Guests() {
           <h3 className="font-semibold mb-3 text-sm">Tambah Tamu</h3>
           <div className="space-y-2">
             <input placeholder="Nama" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded text-sm" data-testid="guest-name"/>
-            <input placeholder="No. WhatsApp" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded text-sm" data-testid="guest-phone"/>
+            <input placeholder="No. WhatsApp (62...)" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded text-sm" data-testid="guest-phone"/>
             <input placeholder="Kategori" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded text-sm"/>
             <button onClick={add} className="px-4 py-2 bg-gray-900 text-white rounded text-sm flex items-center gap-2" data-testid="add-guest"><Plus size={14}/> Tambah</button>
           </div>
@@ -96,7 +107,7 @@ export default function Guests() {
                 </tr>
               );
             })}
-            {items.length === 0 && <tr><td colSpan={5} className="text-center text-gray-500 py-10">Belum ada tamu.</td></tr>}
+            {items.length === 0 && <tr><td colSpan={5} className="text-center text-gray-500 py-10">Belum ada tamu untuk undangan ini.</td></tr>}
           </tbody>
         </table>
       </div>

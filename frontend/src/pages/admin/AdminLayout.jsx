@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
 import {
   LayoutDashboard, Mail, Users, Calendar, MessageSquare,
-  Image, BookOpen, Gift, Palette, LogOut, Heart, Menu, X
+  Image, BookOpen, Gift, Palette, LogOut, Heart, Menu, X, ChevronDown
 } from "lucide-react";
 import { auth } from "@/lib/api";
+import { InvitationProvider, useInvitation } from "@/lib/InvitationContext";
 
 const nav = [
   { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
@@ -18,7 +19,39 @@ const nav = [
   { to: "/admin/templates", icon: Palette, label: "Template" },
 ];
 
-export default function AdminLayout() {
+function InvitationSelector() {
+  const { invitations, selectedSlug, setSelectedSlug, selected } = useInvitation();
+  if (invitations.length === 0) {
+    return (
+      <Link to="/admin/invitations" className="text-xs text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full hover:bg-amber-100" data-testid="no-invitations-cta">
+        + Buat undangan pertama
+      </Link>
+    );
+  }
+  return (
+    <div className="relative inline-flex items-center gap-2">
+      <span className="text-xs text-gray-500 hidden md:inline">Mengelola:</span>
+      <div className="relative">
+        <select
+          value={selectedSlug}
+          onChange={(e) => setSelectedSlug(e.target.value)}
+          data-testid="invitation-selector"
+          className="appearance-none pl-3 pr-9 py-1.5 text-sm rounded-full bg-amber-50 border border-amber-200 text-amber-900 font-medium hover:bg-amber-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400 max-w-[260px] truncate"
+        >
+          {invitations.map((i) => (
+            <option key={i.slug} value={i.slug}>{i.groom_name} & {i.bride_name}</option>
+          ))}
+        </select>
+        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-700 pointer-events-none"/>
+      </div>
+      {selected && (
+        <Link to={`/${selected.slug}?untuk=Tamu`} target="_blank" className="text-xs px-2 py-1 text-gray-500 hover:text-amber-700" data-testid="open-selected-public" title="Lihat undangan publik">↗</Link>
+      )}
+    </div>
+  );
+}
+
+function LayoutInner() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [open, setOpen] = useState(false);
@@ -33,7 +66,6 @@ export default function AdminLayout() {
 
   return (
     <div className="admin flex min-h-screen">
-      {/* Sidebar */}
       <aside className={`fixed md:static top-0 left-0 z-40 w-64 bg-white border-r border-gray-200 h-screen flex-shrink-0 flex flex-col transition-transform ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
         <div className="px-6 py-6 border-b border-gray-100 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2" data-testid="admin-brand">
@@ -66,20 +98,28 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* Mobile overlay */}
       {open && <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setOpen(false)}/>}
 
-      {/* Content */}
       <main className="flex-1 md:ml-0 min-w-0">
-        <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
-          <button onClick={() => setOpen(true)} className="md:hidden p-1"><Menu size={20}/></button>
-          <h1 className="text-lg font-semibold">Admin Panel</h1>
-          <Link to="/ahnaf-nabilla?untuk=Tamu" target="_blank" className="text-xs text-gray-600 hover:text-gray-900" data-testid="view-public">Lihat Undangan →</Link>
+        <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-20 gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <button onClick={() => setOpen(true)} className="md:hidden p-1"><Menu size={20}/></button>
+            <h1 className="text-base font-semibold hidden md:block">Admin Panel</h1>
+          </div>
+          <InvitationSelector/>
         </header>
         <div className="p-6">
           <Outlet />
         </div>
       </main>
     </div>
+  );
+}
+
+export default function AdminLayout() {
+  return (
+    <InvitationProvider>
+      <LayoutInner />
+    </InvitationProvider>
   );
 }

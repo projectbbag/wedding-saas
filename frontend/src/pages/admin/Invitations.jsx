@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { adminApi } from "@/lib/api";
+import api from "@/lib/api";
 import { toast } from "sonner";
-import { Plus, Trash2, ExternalLink, Edit3, ImageIcon, Calendar, Music, Heart, User } from "lucide-react";
+import { Plus, Trash2, ExternalLink, Edit3, ImageIcon, Calendar, Music, Heart, User, Upload } from "lucide-react";
+import { useInvitation } from "@/lib/InvitationContext";
 
 const empty = {
   slug: "", template: "elegant", hide_photos: false, hide_gallery: false, hide_video: false,
@@ -57,10 +59,18 @@ const TABS = [
 ];
 
 export default function Invitations() {
+  const { reload: reloadCtx, setSelectedSlug } = useInvitation();
   const [items, setItems] = useState([]);
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [tab, setTab] = useState("basic");
+  const [uploadingMusic, setUploadingMusic] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const musicFileRef = useRef(null);
+  const coverFileRef = useRef(null);
+  const groomFileRef = useRef(null);
+  const brideFileRef = useRef(null);
+  const qrisFileRef = useRef(null);
 
   const load = () => adminApi.listInvitations().then((r) => setItems(r.data));
   useEffect(() => { load(); }, []);
@@ -83,20 +93,45 @@ export default function Invitations() {
       if (editing._isNew) {
         await adminApi.createInvitation(payload);
         toast.success("Undangan dibuat");
+        setSelectedSlug(payload.slug);
       } else {
         await adminApi.updateInvitation(editing._originalSlug || editing.slug, payload);
         toast.success("Undangan diperbarui");
       }
-      setShowForm(false); setEditing(null); load();
+      setShowForm(false); setEditing(null); load(); reloadCtx();
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Gagal menyimpan");
     }
   };
 
   const remove = async (slug) => {
-    if (!window.confirm("Hapus undangan ini? Semua data terkait akan dihapus.")) return;
+    if (!window.confirm("Hapus undangan ini? Semua data terkait (tamu, RSVP, ucapan, galeri, stories, gifts) akan ikut terhapus.")) return;
     await adminApi.deleteInvitation(slug);
-    toast.success("Dihapus"); load();
+    toast.success("Dihapus"); load(); reloadCtx();
+  };
+
+  const uploadMusic = async (file) => {
+    setUploadingMusic(true);
+    try {
+      const fd = new FormData(); fd.append("file", file);
+      const r = await api.post("/admin/upload/music", fd, { headers: { "Content-Type": "multipart/form-data" } });
+      setEditing({ ...editing, music_url: r.data.url });
+      toast.success(`Musik diupload (${(r.data.size / 1024 / 1024).toFixed(1)} MB)`);
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Gagal upload musik");
+    } finally { setUploadingMusic(false); }
+  };
+
+  const uploadImage = async (file, key) => {
+    if (key === "cover_photo") setUploadingCover(true);
+    try {
+      const fd = new FormData(); fd.append("file", file);
+      const r = await api.post("/admin/upload/image", fd, { headers: { "Content-Type": "multipart/form-data" } });
+      setEditing({ ...editing, [key]: r.data.url });
+      toast.success(`Gambar diupload`);
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Gagal upload gambar");
+    } finally { if (key === "cover_photo") setUploadingCover(false); }
   };
 
   // Quick toggle for hide_photos directly from row
@@ -104,8 +139,8 @@ export default function Invitations() {
     const payload = { ...it, hide_photos: !it.hide_photos };
     delete payload.id; delete payload.owner_id; delete payload.created_at;
     await adminApi.updateInvitation(it.slug, payload);
-    toast.success(payload.hide_photos ? "Mode tanpa foto aktif" : "Mode dengan foto aktif");
-    load();
+    toast.success(payload.hide_photos ? "Foto mempelai disembunyikan" : "Foto mempelai ditampilkan");
+    load(); reloadCtx();
   };
 
   return (
@@ -197,8 +232,8 @@ export default function Invitations() {
                     </div>
                   </div>
                   <ToggleField editing={editing} setEditing={setEditing} k="hide_photos"
-                    label="Mode Tanpa Foto Mempelai"
-                    hint="Aktifkan jika ingin undangan tampil dengan monogram inisial (tanpa foto pasangan). Cocok untuk privasi atau gaya minimalis."/>
+                    label="Sembunyikan Foto Mempelai (Pria & Wanita)"
+                    hint="Hanya foto profil mempelai di section 'Mempelai Berbahagia' yang disembunyikan & diganti monogram. Cover dan Galeri tidak terpengaruh."/>
                   <ToggleField editing={editing} setEditing={setEditing} k="hide_gallery"
                     label="Sembunyikan Galeri Foto"
                     hint="Sembunyikan seluruh section galeri foto dari undangan publik."/>
@@ -212,24 +247,42 @@ export default function Invitations() {
               )}
 
               {tab === "groom" && (
-                <div className="grid md:grid-cols-2 gap-3">
-                  <Field editing={editing} setEditing={setEditing} label="Panggilan" k="groom_name" placeholder="Ahnaf"/>
-                  <Field editing={editing} setEditing={setEditing} label="Nama Lengkap" k="groom_full_name" placeholder="Ahnaf Zainul Muttaqin"/>
-                  <Field editing={editing} setEditing={setEditing} label="Nama Ayah" k="groom_father" placeholder="Bapak ..."/>
-                  <Field editing={editing} setEditing={setEditing} label="Nama Ibu" k="groom_mother" placeholder="Ibu ..."/>
-                  <Field editing={editing} setEditing={setEditing} label="Instagram URL" k="groom_instagram" placeholder="https://instagram.com/..."/>
-                  <Field editing={editing} setEditing={setEditing} label="Foto URL" k="groom_photo" placeholder="https://..." hint="Diabaikan jika mode tanpa foto aktif"/>
+                <div className="space-y-3">
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <Field editing={editing} setEditing={setEditing} label="Panggilan" k="groom_name" placeholder="Ahnaf"/>
+                    <Field editing={editing} setEditing={setEditing} label="Nama Lengkap" k="groom_full_name" placeholder="Ahnaf Zainul Muttaqin"/>
+                    <Field editing={editing} setEditing={setEditing} label="Nama Ayah" k="groom_father" placeholder="Bapak ..."/>
+                    <Field editing={editing} setEditing={setEditing} label="Nama Ibu" k="groom_mother" placeholder="Ibu ..."/>
+                    <Field editing={editing} setEditing={setEditing} label="Instagram URL" k="groom_instagram" placeholder="https://instagram.com/..."/>
+                  </div>
+                  <div>
+                    <Field editing={editing} setEditing={setEditing} label="Foto URL" k="groom_photo" placeholder="https://..." hint="Otomatis diabaikan jika 'Sembunyikan Foto Mempelai' aktif"/>
+                    <input ref={groomFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], "groom_photo")} data-testid="upload-groom-input"/>
+                    <button type="button" onClick={() => groomFileRef.current?.click()} className="mt-2 px-3 py-2 border border-amber-500 text-amber-700 rounded text-xs flex items-center gap-2 hover:bg-amber-50" data-testid="upload-groom-btn">
+                      <Upload size={12}/> Upload Foto Mempelai Pria
+                    </button>
+                    {editing.groom_photo && <img src={editing.groom_photo.startsWith("/") ? `${process.env.REACT_APP_BACKEND_URL}${editing.groom_photo}` : editing.groom_photo} alt="" className="mt-3 w-24 h-32 object-cover rounded border border-gray-200"/>}
+                  </div>
                 </div>
               )}
 
               {tab === "bride" && (
-                <div className="grid md:grid-cols-2 gap-3">
-                  <Field editing={editing} setEditing={setEditing} label="Panggilan" k="bride_name" placeholder="Nabilla"/>
-                  <Field editing={editing} setEditing={setEditing} label="Nama Lengkap" k="bride_full_name" placeholder="Nabilla Devinda Putri"/>
-                  <Field editing={editing} setEditing={setEditing} label="Nama Ayah" k="bride_father" placeholder="Bapak ..."/>
-                  <Field editing={editing} setEditing={setEditing} label="Nama Ibu" k="bride_mother" placeholder="Ibu ..."/>
-                  <Field editing={editing} setEditing={setEditing} label="Instagram URL" k="bride_instagram" placeholder="https://instagram.com/..."/>
-                  <Field editing={editing} setEditing={setEditing} label="Foto URL" k="bride_photo" placeholder="https://..." hint="Diabaikan jika mode tanpa foto aktif"/>
+                <div className="space-y-3">
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <Field editing={editing} setEditing={setEditing} label="Panggilan" k="bride_name" placeholder="Nabilla"/>
+                    <Field editing={editing} setEditing={setEditing} label="Nama Lengkap" k="bride_full_name" placeholder="Nabilla Devinda Putri"/>
+                    <Field editing={editing} setEditing={setEditing} label="Nama Ayah" k="bride_father" placeholder="Bapak ..."/>
+                    <Field editing={editing} setEditing={setEditing} label="Nama Ibu" k="bride_mother" placeholder="Ibu ..."/>
+                    <Field editing={editing} setEditing={setEditing} label="Instagram URL" k="bride_instagram" placeholder="https://instagram.com/..."/>
+                  </div>
+                  <div>
+                    <Field editing={editing} setEditing={setEditing} label="Foto URL" k="bride_photo" placeholder="https://..." hint="Otomatis diabaikan jika 'Sembunyikan Foto Mempelai' aktif"/>
+                    <input ref={brideFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], "bride_photo")} data-testid="upload-bride-input"/>
+                    <button type="button" onClick={() => brideFileRef.current?.click()} className="mt-2 px-3 py-2 border border-amber-500 text-amber-700 rounded text-xs flex items-center gap-2 hover:bg-amber-50" data-testid="upload-bride-btn">
+                      <Upload size={12}/> Upload Foto Mempelai Wanita
+                    </button>
+                    {editing.bride_photo && <img src={editing.bride_photo.startsWith("/") ? `${process.env.REACT_APP_BACKEND_URL}${editing.bride_photo}` : editing.bride_photo} alt="" className="mt-3 w-24 h-32 object-cover rounded border border-gray-200"/>}
+                  </div>
                 </div>
               )}
 
@@ -256,12 +309,38 @@ export default function Invitations() {
               )}
 
               {tab === "media" && (
-                <>
-                  <Field editing={editing} setEditing={setEditing} label="Cover Photo URL" k="cover_photo" placeholder="https://..." hint="Foto utama pada cover screen. Diabaikan jika mode tanpa foto aktif."/>
-                  <Field editing={editing} setEditing={setEditing} label="Background Music URL" k="music_url" placeholder="https://...mp3"/>
+                <div className="space-y-5">
+                  <div>
+                    <Field editing={editing} setEditing={setEditing} label="Cover Photo URL" k="cover_photo" placeholder="https://..." hint="Foto utama pada cover screen. Selalu dipakai (tidak terpengaruh opsi 'sembunyikan foto mempelai'). Kosongkan untuk pakai monogram inisial."/>
+                    <input ref={coverFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], "cover_photo")} data-testid="upload-cover-input"/>
+                    <button type="button" onClick={() => coverFileRef.current?.click()} disabled={uploadingCover} className="mt-2 px-3 py-2 border border-amber-500 text-amber-700 rounded text-xs flex items-center gap-2 hover:bg-amber-50" data-testid="upload-cover-btn">
+                      <Upload size={12}/> {uploadingCover ? "Mengupload..." : "Upload Cover Photo"}
+                    </button>
+                    {editing.cover_photo && <img src={editing.cover_photo.startsWith("/") ? `${process.env.REACT_APP_BACKEND_URL}${editing.cover_photo}` : editing.cover_photo} alt="" className="mt-3 w-48 h-28 object-cover rounded border border-gray-200"/>}
+                  </div>
+
+                  <div>
+                    <Field editing={editing} setEditing={setEditing} label="Background Music URL" k="music_url" placeholder="https://...mp3 atau /api/static/music/..."/>
+                    <input ref={musicFileRef} type="file" accept="audio/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadMusic(e.target.files[0])} data-testid="upload-music-input"/>
+                    <button type="button" onClick={() => musicFileRef.current?.click()} disabled={uploadingMusic} className="mt-2 px-3 py-2 border border-amber-500 text-amber-700 rounded text-xs flex items-center gap-2 hover:bg-amber-50" data-testid="upload-music-btn">
+                      <Upload size={12}/> {uploadingMusic ? "Mengupload musik..." : "Upload File Musik (MP3, max 20MB)"}
+                    </button>
+                    {editing.music_url && (
+                      <audio controls className="mt-3 w-full max-w-md h-9" src={editing.music_url.startsWith("/") ? `${process.env.REACT_APP_BACKEND_URL}${editing.music_url}` : editing.music_url}/>
+                    )}
+                  </div>
+
                   <Field editing={editing} setEditing={setEditing} label="Video Prewedding (YouTube embed)" k="video_url" placeholder="https://www.youtube.com/embed/VIDEO_ID"/>
-                  <Field editing={editing} setEditing={setEditing} label="QRIS Image URL" k="qris_image" placeholder="https://..."/>
-                </>
+
+                  <div>
+                    <Field editing={editing} setEditing={setEditing} label="QRIS Image URL" k="qris_image" placeholder="https://..."/>
+                    <input ref={qrisFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], "qris_image")} data-testid="upload-qris-input"/>
+                    <button type="button" onClick={() => qrisFileRef.current?.click()} className="mt-2 px-3 py-2 border border-amber-500 text-amber-700 rounded text-xs flex items-center gap-2 hover:bg-amber-50" data-testid="upload-qris-btn">
+                      <Upload size={12}/> Upload QRIS Image
+                    </button>
+                    {editing.qris_image && <img src={editing.qris_image.startsWith("/") ? `${process.env.REACT_APP_BACKEND_URL}${editing.qris_image}` : editing.qris_image} alt="" className="mt-3 w-32 h-32 object-contain rounded border border-gray-200 bg-white"/>}
+                  </div>
+                </div>
               )}
             </div>
 

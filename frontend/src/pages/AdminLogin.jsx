@@ -53,10 +53,6 @@ export default function AdminLogin() {
             <LogIn size={14}/> {loading ? "Memproses..." : "Masuk"}
           </button>
         </form>
-        <div className="mt-6 p-4 bg-black/30 rounded-lg border border-white/5">
-          <p className="text-white/40 text-xs">Default credentials:</p>
-          <p className="text-white/70 text-xs mt-1">admin@ringvitation.com / admin123</p>
-        </div>
       </div>
     </div>
   );

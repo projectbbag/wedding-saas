@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
 import { adminApi } from "@/lib/api";
-import { Trash2, Download, Filter } from "lucide-react";
+import { Trash2, Download } from "lucide-react";
 import { toast } from "sonner";
+import { useInvitation } from "@/lib/InvitationContext";
 
 export default function Rsvps() {
+  const { selectedSlug, selected } = useInvitation();
   const [items, setItems] = useState([]);
   const [filter, setFilter] = useState("all");
 
-  const load = () => adminApi.listRsvps().then((r) => setItems(r.data));
-  useEffect(() => { load(); }, []);
+  const load = () => {
+    if (!selectedSlug) { setItems([]); return; }
+    adminApi.listRsvps(selectedSlug).then((r) => setItems(r.data));
+  };
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [selectedSlug]);
 
   const filtered = filter === "all" ? items : items.filter((i) => i.attendance === filter);
 
@@ -17,17 +22,21 @@ export default function Rsvps() {
       filtered.map((r) => `"${r.guest_name}","${r.phone}","${r.attendance}","${r.guest_count}","${(r.message || "").replace(/"/g, "'")}","${r.created_at}"`)
     ).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "rsvp.csv"; a.click();
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `rsvp-${selectedSlug}.csv`; a.click();
   };
 
   const remove = async (id) => { await adminApi.deleteRsvp(id); toast.success("Dihapus"); load(); };
 
+  if (!selected) {
+    return <div className="bg-amber-50 border border-amber-200 text-amber-800 p-6 rounded-xl text-sm">Pilih undangan terlebih dahulu dari selector di header.</div>;
+  }
+
   return (
     <div data-testid="admin-rsvps">
-      <div className="flex justify-between items-start mb-6">
+      <div className="flex justify-between items-start mb-6 flex-wrap gap-2">
         <div>
-          <h2 className="text-2xl font-semibold">RSVP</h2>
-          <p className="text-gray-500 text-sm">Konfirmasi kehadiran tamu.</p>
+          <h2 className="text-2xl font-semibold mb-1">RSVP</h2>
+          <p className="text-gray-500 text-sm">Konfirmasi untuk: <span className="text-amber-700 font-medium">{selected.groom_name} & {selected.bride_name}</span></p>
         </div>
         <div className="flex gap-2">
           <select value={filter} onChange={(e) => setFilter(e.target.value)} className="px-3 py-2 border border-gray-300 rounded text-sm" data-testid="rsvp-filter">
@@ -63,7 +72,7 @@ export default function Rsvps() {
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && <tr><td colSpan={7} className="text-center text-gray-500 py-10">Belum ada RSVP.</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={7} className="text-center text-gray-500 py-10">Belum ada RSVP untuk undangan ini.</td></tr>}
           </tbody>
         </table>
       </div>

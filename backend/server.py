@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request, UploadFile, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
@@ -422,6 +422,44 @@ async def admin_list_wishes(slug: Optional[str] = None, user=Depends(get_current
 async def admin_delete_wish(wish_id: str, user=Depends(get_current_user)):
     await db.wishes.delete_one({"id": wish_id})
     return {"ok": True}
+
+
+# ============ File Upload endpoints ============
+@api_router.post("/admin/upload/music")
+async def upload_music(file: UploadFile = File(...), user=Depends(get_current_user)):
+    """Upload MP3/audio file. Returns relative URL to use as music_url."""
+    if not file.content_type or not file.content_type.startswith("audio"):
+        raise HTTPException(400, "File harus berupa audio (MP3/M4A/OGG)")
+    ext = (file.filename.rsplit(".", 1)[-1] if "." in file.filename else "mp3").lower()
+    if ext not in {"mp3", "m4a", "ogg", "wav", "aac"}:
+        raise HTTPException(400, "Format audio tidak didukung")
+    music_dir = ROOT_DIR / "static" / "music"
+    music_dir.mkdir(parents=True, exist_ok=True)
+    new_name = f"{uuid.uuid4().hex}.{ext}"
+    out = music_dir / new_name
+    content = await file.read()
+    if len(content) > 20 * 1024 * 1024:
+        raise HTTPException(400, "Maksimal ukuran file 20MB")
+    out.write_bytes(content)
+    return {"url": f"/api/static/music/{new_name}", "filename": file.filename, "size": len(content)}
+
+@api_router.post("/admin/upload/image")
+async def upload_image(file: UploadFile = File(...), user=Depends(get_current_user)):
+    """Upload image file. Returns relative URL to use as image src."""
+    if not file.content_type or not file.content_type.startswith("image"):
+        raise HTTPException(400, "File harus berupa gambar")
+    ext = (file.filename.rsplit(".", 1)[-1] if "." in file.filename else "jpg").lower()
+    if ext not in {"jpg", "jpeg", "png", "webp", "gif"}:
+        raise HTTPException(400, "Format gambar tidak didukung")
+    img_dir = ROOT_DIR / "static" / "images"
+    img_dir.mkdir(parents=True, exist_ok=True)
+    new_name = f"{uuid.uuid4().hex}.{ext}"
+    out = img_dir / new_name
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(400, "Maksimal ukuran file 10MB")
+    out.write_bytes(content)
+    return {"url": f"/api/static/images/{new_name}", "filename": file.filename, "size": len(content)}
 
 
 # ============ Seeder ============

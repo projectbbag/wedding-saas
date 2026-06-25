@@ -2,17 +2,26 @@ import { useEffect, useState } from "react";
 import { adminApi } from "@/lib/api";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useInvitation } from "@/lib/InvitationContext";
 
 export default function Wishes() {
+  const { selectedSlug, selected } = useInvitation();
   const [items, setItems] = useState([]);
-  const load = () => adminApi.listWishes().then((r) => setItems(r.data));
-  useEffect(() => { load(); }, []);
+  const load = () => {
+    if (!selectedSlug) { setItems([]); return; }
+    adminApi.listWishes(selectedSlug).then((r) => setItems(r.data));
+  };
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [selectedSlug]);
   const remove = async (id) => { await adminApi.deleteWish(id); toast.success("Dihapus"); load(); };
+
+  if (!selected) {
+    return <div className="bg-amber-50 border border-amber-200 text-amber-800 p-6 rounded-xl text-sm">Pilih undangan terlebih dahulu dari selector di header.</div>;
+  }
 
   return (
     <div data-testid="admin-wishes">
       <h2 className="text-2xl font-semibold mb-1">Ucapan & Doa</h2>
-      <p className="text-gray-500 text-sm mb-6">Moderasi ucapan dari tamu.</p>
+      <p className="text-gray-500 text-sm mb-6">Moderasi ucapan untuk: <span className="text-amber-700 font-medium">{selected.groom_name} & {selected.bride_name}</span></p>
       <div className="grid md:grid-cols-2 gap-3">
         {items.map((w) => (
           <div key={w.id} className="bg-white border border-gray-200 rounded-xl p-5">
@@ -27,7 +36,7 @@ export default function Wishes() {
             <p className="text-sm text-gray-700">{w.message}</p>
           </div>
         ))}
-        {items.length === 0 && <p className="text-gray-500 text-sm col-span-2 text-center py-10">Belum ada ucapan.</p>}
+        {items.length === 0 && <p className="text-gray-500 text-sm col-span-2 text-center py-10">Belum ada ucapan untuk undangan ini.</p>}
       </div>
     </div>
   );

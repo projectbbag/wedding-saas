@@ -163,11 +163,25 @@ export default function InvitationPage() {
 
 /* ============= Sections ============= */
 function CoverScreen({ inv, guestName, onOpen, template }) {
-  const hide = inv.hide_photos;
+  // Cover always uses cover_photo (independent from hide_photos). Falls back to monogram if no photo set.
+  const hasCover = !!inv.cover_photo;
   return (
     <motion.div exit={{ opacity: 0, scale: 1.05 }} transition={{ duration: 0.8 }}
       className="fixed inset-0 z-50 overflow-hidden" data-testid="cover-screen">
-      {hide ? (
+      {hasCover ? (
+        <>
+          <img
+  src={
+    inv.cover_photo?.startsWith("/")
+      ? `${process.env.REACT_APP_BACKEND_URL}${inv.cover_photo}`
+      : inv.cover_photo
+  }
+  alt=""
+  className="absolute inset-0 w-full h-full object-cover"
+/>
+<div className="absolute inset-0 cover-overlay" />
+</>
+      ) : (
         <div className="absolute inset-0" style={{
           background: template === "luxury"
             ? "radial-gradient(ellipse at center, #1a1410 0%, #050505 70%)"
@@ -177,20 +191,14 @@ function CoverScreen({ inv, guestName, onOpen, template }) {
                 ? "radial-gradient(ellipse at center, #f9fafb 0%, #d1d5db 70%)"
                 : "radial-gradient(ellipse at center, #fdfbf7 0%, #e6d599 70%)"
         }}>
-          {/* Decorative ornaments */}
           <div className="absolute inset-0 opacity-20" style={{
             backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='currentColor' stroke-width='0.6' opacity='0.5'%3E%3Cpath d='M40 10 Q50 25 40 40 Q30 25 40 10'/%3E%3Cpath d='M40 40 Q50 55 40 70 Q30 55 40 40'/%3E%3Cpath d='M10 40 Q25 30 40 40 Q25 50 10 40'/%3E%3Cpath d='M40 40 Q55 30 70 40 Q55 50 40 40'/%3E%3C/g%3E%3C/svg%3E\")",
             color: "var(--primary, #B8923A)"
           }} aria-hidden="true"/>
         </div>
-      ) : (
-        <>
-          <img src={inv.cover_photo} alt="" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0 cover-overlay" />
-        </>
       )}
-      <div className={`relative z-10 h-full flex flex-col items-center justify-center text-center px-6 ${hide && (template === "minimalist" || template === "modern" || template === "elegant") ? "text-current" : "text-white"}`}>
-        {hide && (
+      <div className={`relative z-10 h-full flex flex-col items-center justify-center text-center px-6 ${hasCover ? "text-white" : (template === "luxury" ? "text-white" : "text-current")}`}>
+        {!hasCover && (
           <motion.div initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1, duration: 1 }}
             className="mb-8 flex items-center justify-center" data-testid="cover-monogram">
             <div className="relative w-32 h-32 md:w-40 md:h-40 flex items-center justify-center">
@@ -206,14 +214,14 @@ function CoverScreen({ inv, guestName, onOpen, template }) {
           className="uppercase text-xs tracking-[0.5em] mb-6 opacity-80">The Wedding Of</motion.p>
         <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 1 }}
           className="h-display text-5xl md:text-7xl mb-4">
-          {inv.groom_name} <span className="italic" style={{ color: hide ? "var(--primary)" : undefined }}>&</span> {inv.bride_name}
+          {inv.groom_name} <span className="italic" style={{ color: !hasCover ? "var(--primary)" : "#fcd34d" }}>&</span> {inv.bride_name}
         </motion.h1>
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
           className="text-sm tracking-[0.3em] uppercase mb-12 opacity-80">17 • Juli • 2026</motion.p>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1 }}
-          className={`border rounded-2xl px-8 py-6 backdrop-blur max-w-md mb-10 ${hide ? "border-current/30 bg-current/5" : "border-white/30 bg-black/30"}`}>
-          <p className="text-xs uppercase tracking-[0.3em] mb-2" style={{ color: "var(--primary)" }}>Kepada Yth.</p>
+          className={`border rounded-2xl px-8 py-6 backdrop-blur max-w-md mb-10 ${hasCover ? "border-white/30 bg-black/30" : "border-current/30 bg-current/5"}`}>
+          <p className="text-xs uppercase tracking-[0.3em] mb-2" style={{ color: hasCover ? "#fcd34d" : "var(--primary)" }}>Kepada Yth.</p>
           <p className="text-xs opacity-70 mb-2">Bpk/Ibu/Saudara/i</p>
           <p data-testid="guest-name-display" style={{ fontFamily: "var(--font-heading)" }} className="text-3xl">{decodeURIComponent(guestName)}</p>
         </motion.div>
@@ -232,19 +240,28 @@ function CoverScreen({ inv, guestName, onOpen, template }) {
 }
 
 function HeroBanner({ inv, guestName, countdown }) {
-  const hide = inv.hide_photos;
+  // Hero uses cover_photo when available, independently from hide_photos
+  const hasCover = !!inv.cover_photo;
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {hide ? (
-        <div className="absolute inset-0 bg-surface-c" />
-      ) : (
+      {hasCover ? (
         <>
-          <img src={inv.cover_photo} alt="" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0 cover-overlay" />
-        </>
+         <img
+  src={
+    inv.cover_photo?.startsWith("/")
+      ? `${process.env.REACT_APP_BACKEND_URL}${inv.cover_photo}`
+      : inv.cover_photo
+  }
+  alt=""
+  className="absolute inset-0 w-full h-full object-cover"
+/>
+<div className="absolute inset-0 cover-overlay" />
+</>
+      ) : (
+        <div className="absolute inset-0 bg-surface-c" />
       )}
-      <motion.div {...fadeUp} className={`relative z-10 text-center px-6 max-w-3xl ${hide ? "" : "text-white"}`}>
-        {hide && (
+      <motion.div {...fadeUp} className={`relative z-10 text-center px-6 max-w-3xl ${hasCover ? "text-white" : ""}`}>
+        {!hasCover && (
           <div className="mb-6 flex justify-center">
             <div className="relative w-24 h-24 flex items-center justify-center">
               <div className="absolute inset-0 rounded-full border-2 border-primary-c"/>
@@ -252,7 +269,7 @@ function HeroBanner({ inv, guestName, countdown }) {
             </div>
           </div>
         )}
-        <p className="uppercase text-xs tracking-[0.5em] mb-6 text-primary-c">Save The Date</p>
+        <p className="uppercase text-xs tracking-[0.5em] mb-6" style={{ color: hasCover ? "#fcd34d" : "var(--primary)" }}>Save The Date</p>
         <h2 className="h-display text-5xl md:text-7xl mb-6">{inv.groom_name} & {inv.bride_name}</h2>
         <p className="text-sm tracking-[0.3em] uppercase mb-10 opacity-80">Jumat, 17 Juli 2026</p>
         <div className="grid grid-cols-4 gap-3 max-w-lg mx-auto" data-testid="countdown">
@@ -262,8 +279,8 @@ function HeroBanner({ inv, guestName, countdown }) {
             { l: "Menit", v: countdown.m },
             { l: "Detik", v: countdown.s },
           ].map((c) => (
-            <div key={c.l} className={`border rounded-xl py-4 ${hide ? "border-line-c bg-surface-c" : "border-white/30 backdrop-blur bg-black/20"}`}>
-              <div className="h-display text-3xl md:text-4xl text-primary-c">{String(c.v).padStart(2, "0")}</div>
+            <div key={c.l} className={`border rounded-xl py-4 ${hasCover ? "border-white/30 backdrop-blur bg-black/20" : "border-line-c bg-surface-c"}`}>
+              <div className="h-display text-3xl md:text-4xl" style={{ color: hasCover ? "#fcd34d" : "var(--primary)" }}>{String(c.v).padStart(2, "0")}</div>
               <div className="text-[10px] uppercase tracking-[0.3em] mt-1 opacity-70">{c.l}</div>
             </div>
           ))}
@@ -639,7 +656,7 @@ function FooterSection({ inv, visitorCount }) {
         <div className="mt-10 inline-flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-muted-c">
           <Users size={12}/> {visitorCount} Pengunjung
         </div>
-        <p className="mt-10 text-xs uppercase tracking-[0.3em] text-muted-c">Powered by Ringvitation • 2026</p>
+        <p className="mt-10 text-xs uppercase tracking-[0.3em] text-muted-c">Powered by BbagProject • 2026</p>
       </motion.div>
     </footer>
   );

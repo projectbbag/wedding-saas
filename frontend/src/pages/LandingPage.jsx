@@ -21,7 +21,7 @@ export default function LandingPage() {
           <div className="w-9 h-9 rounded-full border border-amber-400/60 flex items-center justify-center anim-ring">
             <Heart size={16} className="text-amber-400" />
           </div>
-          <span style={{ fontFamily: "Italiana, serif" }} className="text-2xl tracking-wide">Ringvitation</span>
+          <span style={{ fontFamily: "Italiana, serif" }} className="text-2xl tracking-wide">BbagProject</span>
         </div>
         <div className="flex gap-3">
           <Link to="/admin/login" data-testid="nav-admin-login" className="px-5 py-2 text-xs uppercase tracking-[0.2em] border border-white/20 rounded-full hover:bg-white/5 transition">Admin</Link>
@@ -91,7 +91,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="border-t border-white/10 py-10 text-center text-white/40 text-xs uppercase tracking-[0.3em]">
-        Made with <Heart size={10} className="inline text-amber-400 mx-1"/> Ringvitation • 2026
+        Made with <Heart size={10} className="inline text-amber-400 mx-1"/> BbagProject • 2026
       </footer>
     </div>
   );
